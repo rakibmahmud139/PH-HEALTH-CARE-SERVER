@@ -17,6 +17,11 @@ const insertIntoDB = async (req: Request) => {
   return result;
 };
 
+const getAllFromDB = async () => {
+  return await prisma.specialties.findMany();
+};
+
 export const specialtiesServices = {
   insertIntoDB,
+  getAllFromDB,
 };

@@ -1,19 +1,19 @@
 import { Request, Response } from "express";
 import { catchAsync } from "../../../shared/catchAsync";
-import { doctorServices } from "./doctor.service";
+import pick from "../../../shared/pick";
+import { patientFilterableFields } from "./patient.constant";
+import { patientService } from "./patient.service";
 import { sendResponse } from "../../../shared/sendResponse";
 import httpStatus from "http-status";
-import pick from "../../../shared/pick";
-import { doctorFilterableFields } from "./doctor.constant";
 
 const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
-  const filters = pick(req.query, doctorFilterableFields);
+  const filters = pick(req.query, patientFilterableFields);
   const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
-  const result = await doctorServices.getAllFromDB(filters, options);
+  const result = await patientService.getAllFromDB(filters, options);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Doctors retrieval successfully",
+    message: "Patient retrieval successfully",
     meta: result.meta,
     data: result.data,
   });
@@ -21,53 +21,51 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
 
 const getByIdFromDB = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const result = await doctorServices.getByIdFromDB(id);
+  const result = await patientService.getByIdFromDB(id);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Doctor retrieval successfully",
+    message: "Patient retrieval successfully",
     data: result,
   });
 });
 
 const updateIntoDB = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-
-  const result = await doctorServices.updateIntoDB(id, req.body);
-
+  const result = await patientService.updateIntoDB(id, req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Doctor updated successfully!",
+    message: "Patient updated successfully",
     data: result,
   });
 });
 
 const deleteFromDB = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const result = await doctorServices.deleteFromDB(id);
+  const result = await patientService.deleteFromDB(id);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Doctor deleted successfully",
+    message: "Patient deleted successfully",
     data: result,
   });
 });
 const softDelete = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const result = await doctorServices.softDelete(id);
+  const result = await patientService.softDelete(id);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Doctor soft deleted successfully",
+    message: "Patient soft deleted successfully",
     data: result,
   });
 });
 
-export const doctorControllers = {
-  updateIntoDB,
+export const patientController = {
   getAllFromDB,
   getByIdFromDB,
+  updateIntoDB,
   deleteFromDB,
   softDelete,
 };
