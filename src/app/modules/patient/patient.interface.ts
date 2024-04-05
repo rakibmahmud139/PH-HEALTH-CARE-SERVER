@@ -19,7 +19,7 @@ export type IMedicalReport = {
   reportLink: string;
 };
 export type IPatientHealthData = {
-  dateOfBirth: string | Date;
+  dateOfBirth: string;
   gender: "MALE" | "FEMALE";
   bloodGroup:
     | "A_POSITIVE"
@@ -30,17 +30,17 @@ export type IPatientHealthData = {
     | "O_NEGATIVE"
     | "AB_POSITIVE"
     | "AB_NEGATIVE";
-  hasAllergies: boolean;
-  hasDiabetes: boolean;
+  hasAllergies?: boolean;
+  hasDiabetes?: boolean;
   height: string;
   weight: string;
-  smokingStatus: boolean;
-  dietaryPreferences: string;
-  pregnancyStatus: boolean;
-  mentalHealthHistory: string;
-  immunizationStatus: boolean;
-  hasPastSurgeries: boolean;
-  recentAnxiety: boolean;
-  recentDepression: boolean;
-  maritalStatus: "MARRIED" | "UNMARRIED";
+  smokingStatus?: boolean;
+  dietaryPreferences?: string;
+  pregnancyStatus?: boolean;
+  mentalHealthHistory?: string;
+  immunizationStatus?: boolean;
+  hasPastSurgeries?: boolean;
+  recentAnxiety?: boolean;
+  recentDepression?: boolean;
+  maritalStatus?: "MARRIED" | "UNMARRIED";
 };
