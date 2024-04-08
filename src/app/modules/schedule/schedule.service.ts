@@ -1,7 +1,10 @@
 import { addHours, format, addMinutes } from "date-fns";
 import prisma from "../../../shared/prisma";
-import { Schedule } from "@prisma/client";
-import { ISchedule } from "./schedule.interface";
+import { Prisma, Schedule } from "@prisma/client";
+import { IFiltersRequest, ISchedule } from "./schedule.interface";
+import { IPaginationOptions } from "../../interfaces/pagination";
+import { IAuthUser, IGenericResponse } from "../../interfaces/common";
+import { paginationHelpers } from "../../../helpers/paginationHelper";
 
 const insertIntoDB = async (payload: ISchedule): Promise<Schedule[]> => {
   const { startDate, endDate, startTime, endTime } = payload;
@@ -62,6 +65,91 @@ const insertIntoDB = async (payload: ISchedule): Promise<Schedule[]> => {
   return schedules;
 };
 
+const getAllFromDB = async (
+  user: IAuthUser,
+  filters: IFiltersRequest,
+  options: IPaginationOptions
+): Promise<IGenericResponse<Schedule[]>> => {
+  const { limit, page, skip } = paginationHelpers.calculatePagination(options);
+  const { startDate, endDate, ...filterData } = filters;
+
+  const andConditions = [];
+
+  if (startDate && endDate) {
+    andConditions.push({
+      AND: [
+        {
+          startDateTime: {
+            gte: startDate,
+          },
+        },
+        {
+          endDateTime: {
+            lte: endDate,
+          },
+        },
+      ],
+    });
+  }
+
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filterData).map((key) => {
+        return {
+          [key]: {
+            equals: (filterData as any)[key],
+          },
+        };
+      }),
+    });
+  }
+
+  const whereConditions: Prisma.ScheduleWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
+  const doctorSchedule = await prisma.doctorSchedules.findMany({
+    where: {
+      doctor: {
+        email: user?.email,
+      },
+    },
+  });
+
+  const doctorSchedulesIds = doctorSchedule.map(
+    (schedule) => schedule.scheduleId
+  );
+
+  const result = await prisma.schedule.findMany({
+    where: {
+      ...whereConditions,
+      id: { notIn: doctorSchedulesIds },
+    },
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : {
+            createdAt: "desc",
+          },
+  });
+  const total = await prisma.schedule.count({
+    where: {
+      ...whereConditions,
+      id: { notIn: doctorSchedulesIds },
+    },
+  });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: result,
+  };
+};
 export const scheduleServices = {
   insertIntoDB,
+  getAllFromDB,
 };
