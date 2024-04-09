@@ -7,10 +7,22 @@ const router = express.Router();
 
 router.get("/", auth(UserRole.DOCTOR), scheduleControllers.getAllFromDB);
 
+router.get(
+  "/:id",
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.DOCTOR),
+  scheduleControllers.getByIdFromDB
+);
+
 router.post(
   "/",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   scheduleControllers.insertIntoDB
+);
+
+router.delete(
+  "/:id",
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  scheduleControllers.deleteFromDB
 );
 
 export const scheduleRoutes = router;
