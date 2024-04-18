@@ -247,8 +247,6 @@ const cancelUnpaidAppointments = async () => {
       });
     }
   });
-
-  console.log("appointmentIdsToCancel");
 };
 
 export const appointmentServices = {
