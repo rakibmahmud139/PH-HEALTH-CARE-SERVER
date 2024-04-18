@@ -1,9 +1,16 @@
-import { Prisma, UserRole } from "@prisma/client";
+import {
+  AppoinmentStatus,
+  PaymentStatus,
+  Prisma,
+  UserRole,
+} from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { paginationHelpers } from "../../../helpers/paginationHelper";
 import prisma from "../../../shared/prisma";
 import { IAuthUser } from "../../interfaces/common";
 import { IPaginationOptions } from "../../interfaces/pagination";
+import { ApiError } from "../../errors/ApiError";
+import httpStatus from "http-status";
 
 const createAppoinment = async (user: IAuthUser, payload: any) => {
   const patientData = await prisma.patient.findUniqueOrThrow({
@@ -160,7 +167,93 @@ const getMyAppointment = async (
   };
 };
 
+const changeAppointmentStatus = async (
+  id: string,
+  appointmentStatus: AppoinmentStatus,
+  user: IAuthUser
+) => {
+  const appoinmentData = await prisma.appointment.findUniqueOrThrow({
+    where: {
+      id,
+    },
+    include: {
+      doctor: true,
+    },
+  });
+
+  if (user?.role === UserRole.DOCTOR) {
+    if (!(user.email === appoinmentData.doctor.email)) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "This is not your appoinment!"
+      );
+    }
+  }
+
+  const result = await prisma.appointment.update({
+    where: {
+      id,
+    },
+    data: {
+      status: appointmentStatus,
+    },
+  });
+
+  return result;
+};
+
+const cancelUnpaidAppointments = async () => {
+  const thirtyMinutesAgo = new Date(Date.now() - 30 * 30 * 1000);
+
+  const unpaidAppoints = await prisma.appointment.findMany({
+    where: {
+      createdAt: {
+        lte: thirtyMinutesAgo,
+      },
+      paymentStatus: PaymentStatus.UNPAID,
+    },
+  });
+
+  const appointmentIdsToCancel = unpaidAppoints.map(
+    (appointment) => appointment.id
+  );
+
+  await prisma.$transaction(async (tx) => {
+    await tx.payment.deleteMany({
+      where: {
+        appointmentId: {
+          in: appointmentIdsToCancel,
+        },
+      },
+    });
+
+    await tx.appointment.deleteMany({
+      where: {
+        id: {
+          in: appointmentIdsToCancel,
+        },
+      },
+    });
+
+    for (const unpaidAppoint of unpaidAppoints) {
+      await tx.doctorSchedules.updateMany({
+        where: {
+          doctorId: unpaidAppoint.doctorId,
+          scheduleId: unpaidAppoint.scheduleId,
+        },
+        data: {
+          isBooked: false,
+        },
+      });
+    }
+  });
+
+  console.log("appointmentIdsToCancel");
+};
+
 export const appointmentServices = {
   createAppoinment,
   getMyAppointment,
+  changeAppointmentStatus,
+  cancelUnpaidAppointments,
 };
