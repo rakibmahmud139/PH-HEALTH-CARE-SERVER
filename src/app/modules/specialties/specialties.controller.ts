@@ -25,7 +25,19 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteFromDB = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await specialtiesServices.deleteFromDB(id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Specialty deleted successfully",
+    data: result,
+  });
+});
+
 export const specialtiesControllers = {
   insertIntoDB,
   getAllFromDB,
+  deleteFromDB,
 };
