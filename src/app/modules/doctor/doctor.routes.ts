@@ -9,7 +9,11 @@ router.get("/", doctorControllers.getAllFromDB);
 
 router.get("/:id", doctorControllers.getByIdFromDB);
 
-router.patch("/:id", doctorControllers.updateIntoDB);
+router.patch(
+  "/:id",
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN, ENUM_USER_ROLE.DOCTOR),
+  doctorControllers.updateIntoDB
+);
 
 router.delete(
   "/:id",
