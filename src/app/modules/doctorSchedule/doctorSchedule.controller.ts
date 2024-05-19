@@ -38,7 +38,8 @@ const getMyScheduleFromDB = catchAsync(
       statusCode: httpStatus.OK,
       success: true,
       message: "My Schedule retrieved successfully!",
-      data: result,
+      meta: result.meta,
+      data: result.data,
     });
   }
 );
