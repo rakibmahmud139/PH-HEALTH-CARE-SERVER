@@ -165,7 +165,7 @@ const resetPassword = async (
 
   const hashedPassword: string = await bcrypt.hash(payload.password, 12);
 
-  await prisma.user.update({
+  const result = await prisma.user.update({
     where: {
       id: payload.id,
       status: UserStatus.ACTIVE,
@@ -174,6 +174,8 @@ const resetPassword = async (
       password: hashedPassword,
     },
   });
+
+  return result;
 };
 
 export const authServices = {
